@@ -1,0 +1,19 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules
+
+# env file
+.env
+
+# wav file output
+output.wav
+
+# Visual Studio code
+.vscode
+
+# Mac files
+.DS_Store
