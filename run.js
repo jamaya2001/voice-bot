@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM Corp. All Rights Reserved.
+ * Copyright 2019 IBM Corp. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the 'License'); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,17 +24,18 @@ const FS = require('fs');
 const MIC = require('mic');
 const PLAYER = require('play-sound')(opts = {});
 const PROBE = require('node-ffprobe');
-const REQUEST = require('request-promise');
-const PROMISE = require('promise');
 var context = {};
 var debug = false;
 var botIsActive = false;
 var startTime = new Date();
-var secsToSleep = 60 * 1000;
+const SLEEP_TIME = 60 * 1000;
+const WAKE_WORD = "hey watson"
 
 /**
- * Create Watson Services.
+ * Configuration and setup
  */
+
+/* Create Watson Services. */
 const conversation = new watson.AssistantV1({
   version: '2018-02-16'
 });
@@ -45,9 +46,7 @@ const speech_to_text = new watson.SpeechToTextV1({
 const text_to_speech = new TextToSpeechV1({
 });
 
-/**
- * Create and configure the microphone.
- */
+/* Create and configure the microphone */
 const MIC_PARAMS = {
   rate: 44100,
   channels: 2,
@@ -68,8 +67,10 @@ MIC_INPUT_STREAM.on('pauseComplete', ()=> {
 });
 
 /**
- * Convert speech to text.
+ * Functions and main app
  */
+
+/* Convert speech to text. */
 const textStream = MIC_INPUT_STREAM.pipe(
   speech_to_text.recognizeUsingWebSocket({
     'content_type': 'audio/l16; rate=44100; channels=2',
@@ -78,11 +79,8 @@ const textStream = MIC_INPUT_STREAM.pipe(
   })).setEncoding('utf8');
 
 
-/**
- * Convert text to speech.
- */
+/* Convert text to speech. */
 const speakResponse = (text) => {
-  
   var params = {
     text: text,
     accept: 'audio/wav',
@@ -90,7 +88,6 @@ const speakResponse = (text) => {
   };
 
   console.log('text: ' + text);
-  
   // Pipe the synthesized text to a file.
   text_to_speech.synthesize(params, function(error, audio) {
     if (error) {
@@ -117,12 +114,7 @@ const speakResponse = (text) => {
   });
 };
 
-/**
- * Log Watson Conversation context values..
- *
- * @param {String} header
- *   First line of log message.
- */
+/* Log Watson Assistant context values.. */
 function printContext(header) {
   if (debug) {
     console.log(header);
@@ -137,22 +129,18 @@ function printContext(header) {
   }
 }
 
-/**
- * Send significant responses from Watson to the console.
- */
+/* Send significant responses from Watson to the console. */
 function watsonSays(response) {
   if (typeof(response) !== 'undefined') {
     console.log('Watson says:', response);
   }
 }
 
-/**
- * Determine if we are ready to talk, or need a wake up command
- */
+/* Determine if we are ready to talk, or need a wake up command */
 function isActive(text) {
   var elapsedTime = new Date() - startTime;
   
-  if (elapsedTime > secsToSleep) {
+  if (elapsedTime > SLEEP_TIME) {
     startTime = new Date();
     botIsActive = false;
   }
@@ -161,25 +149,22 @@ function isActive(text) {
     startTime = new Date();
     return true;
   } else {
-    if (text.toLowerCase().indexOf('hello') > -1) {
+    if (text.toLowerCase().indexOf(WAKE_WORD) > -1) {
       botIsActive = true;
     } else {
-      console.log("TJBot needs the wake up command");
+      console.log("App needs the wake up command");
     }
     return botIsActive;
   }
 }
 
-/**
- * Watson conversation with user.
- */
+/* Keep conversation with user alive until it breaks */
 function theConversation() {
-  console.log('TJBot is listening, you may speak now.');
-  //speakResponse('TJ Bot is alive');
+  console.log('App is listening, you may speak now.');
 
   textStream.on('data', (user_speech_text) => {
     userSpeechText = user_speech_text.toLowerCase();
-    console.log('\n\nWatson hears: ', user_speech_text);
+    console.log('\n\nApp hears: ', user_speech_text);
     printContext('before call 1:');
     if (isActive(user_speech_text)) {
       conversation.message({
@@ -200,15 +185,6 @@ function theConversation() {
   });
 }
 
-/**
- * Start the conversation once all MLB data is loaded.
- */
-function startConversation() {
-    // Initialize microphone
-    MIC_INSTANCE.start();
-
-    // Begin watson conversation.
-    theConversation();
-}
-
-startConversation();
+/* Start the app */
+MIC_INSTANCE.start();
+theConversation();
