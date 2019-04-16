@@ -20,16 +20,18 @@ require('dotenv').config({ silent: true });
 
 const watson = require('watson-developer-cloud');
 const TextToSpeechV1 = require('watson-developer-cloud/text-to-speech/v1');
-const FS = require('fs');
-const MIC = require('mic');
-const PLAYER = require('play-sound')(opts = {});
-const PROBE = require('node-ffprobe');
+const SpeechToTextV1 = require('watson-developer-cloud/speech-to-text/v1');
+const fs = require('fs');
+const mic = require('mic');
+const speaker = require('play-sound')(opts = {});
+const ffprobe = require('node-ffprobe');
 var context = {};
 var debug = false;
 var botIsActive = false;
 var startTime = new Date();
-const SLEEP_TIME = 60 * 1000;
-const WAKE_WORD = "hey watson"
+
+const SLEEP_TIME = 60 * 1000;     // number of secs to wait before falling asleep
+const WAKE_WORD = "hello watson";   // if asleep, phrase that will wake us up
 
 /**
  * Configuration and setup
@@ -40,28 +42,28 @@ const conversation = new watson.AssistantV1({
   version: '2018-02-16'
 });
 
-const speech_to_text = new watson.SpeechToTextV1({
+const speechToText = new SpeechToTextV1({
 });
 
-const text_to_speech = new TextToSpeechV1({
+const textToSpeech = new TextToSpeechV1({
 });
 
 /* Create and configure the microphone */
-const MIC_PARAMS = {
+const micParams = {
   rate: 44100,
   channels: 2,
   debug: false,
   exitOnSilence: 6
 };
-const MIC_INSTANCE = MIC(MIC_PARAMS);
-const MIC_INPUT_STREAM = MIC_INSTANCE.getAudioStream();
+const microphone = mic(micParams);
+const micInputStream = microphone.getAudioStream();
 
 let pauseDuration = 0;
-MIC_INPUT_STREAM.on('pauseComplete', ()=> {
+micInputStream.on('pauseComplete', ()=> {
   console.log('Microphone paused for', pauseDuration, 'seconds.');
-  // Stop listening when speaker is talking.
+  // Stop listening when Watson is talking.
   setTimeout(function() {
-      MIC_INSTANCE.resume();
+    microphone.resume();
       console.log('Microphone resumed.');
   }, Math.round(pauseDuration * 1000));
 });
@@ -71,13 +73,12 @@ MIC_INPUT_STREAM.on('pauseComplete', ()=> {
  */
 
 /* Convert speech to text. */
-const textStream = MIC_INPUT_STREAM.pipe(
-  speech_to_text.recognizeUsingWebSocket({
-    'content_type': 'audio/l16; rate=44100; channels=2',
+const textStream = micInputStream.pipe(
+  speechToText.recognizeUsingWebSocket({
+    content_type: 'audio/l16; rate=44100; channels=2',
     interim_results: true,
     inactivity_timeout: -1
   })).setEncoding('utf8');
-
 
 /* Convert text to speech. */
 const speakResponse = (text) => {
@@ -88,33 +89,36 @@ const speakResponse = (text) => {
   };
 
   console.log('text: ' + text);
-  // Pipe the synthesized text to a file.
-  text_to_speech.synthesize(params, function(error, audio) {
-    if (error) {
-      console.log('synthesize error: ' + error);
-    } else {
-      var writeStream = FS.createWriteStream('output.wav');
-      writeStream.on('finish', function() {
-        // determine how long message is and then pause mic for that long
-        PROBE('output.wav', function(err, probeData) {
-          if (probeData) {
-            pauseDuration = probeData.format.duration;
-            MIC_INSTANCE.pause();
-            // play message to user
-            PLAYER.play('output.wav');
-          }
-        });
-      });  
-      writeStream.on('error', function(err) {
-        console.log('Text-to-speech streaming error: ' + err);
-      });
-      writeStream.write(audio);
-      writeStream.end();
-    }
+
+  var writeStream = fs.createWriteStream('output.wav');
+  textToSpeech.synthesize(params)
+  .then(audio => {
+    audio.pipe(writeStream);
+  })
+  .catch(err => {
+    console.log('error:', err);
   });
+
+  writeStream.on('finish', function() {
+    console.log('writeStream - finished');
+    // determine length of response to user
+    ffprobe('output.wav', function(err, probeData) {
+      if (probeData) {
+        pauseDuration = probeData.format.duration;
+        // pause microphone until response is delivered to user
+        microphone.pause();
+        // play message to user
+        speaker.play('output.wav');
+      }
+    });
+  });  
+  writeStream.on('error', function(err) {
+    console.log('Text-to-speech streaming error: ' + err);
+  });
+
 };
 
-/* Log Watson Assistant context values.. */
+/* Log Watson Assistant context values, so we can follow along with its logic. */
 function printContext(header) {
   if (debug) {
     console.log(header);
@@ -129,7 +133,7 @@ function printContext(header) {
   }
 }
 
-/* Send significant responses from Watson to the console. */
+/* Log significant responses from Watson to the console. */
 function watsonSays(response) {
   if (typeof(response) !== 'undefined') {
     console.log('Watson says:', response);
@@ -141,17 +145,22 @@ function isActive(text) {
   var elapsedTime = new Date() - startTime;
   
   if (elapsedTime > SLEEP_TIME) {
+    // go to sleep
     startTime = new Date();
     botIsActive = false;
   }
 
   if (botIsActive) {
+    // in active conversation, so stay awake
     startTime = new Date();
     return true;
   } else {
+    // we are asleep - did we get a wake up call?
     if (text.toLowerCase().indexOf(WAKE_WORD) > -1) {
+      // time to wake up
       botIsActive = true;
     } else {
+      // false alarm, go back to sleep
       console.log("App needs the wake up command");
     }
     return botIsActive;
@@ -159,13 +168,12 @@ function isActive(text) {
 }
 
 /* Keep conversation with user alive until it breaks */
-function theConversation() {
+function performConversation() {
   console.log('App is listening, you may speak now.');
 
   textStream.on('data', (user_speech_text) => {
     userSpeechText = user_speech_text.toLowerCase();
     console.log('\n\nApp hears: ', user_speech_text);
-    printContext('before call 1:');
     if (isActive(user_speech_text)) {
       conversation.message({
         workspace_id: process.env.CONVERSATION_WORKSPACE_ID,
@@ -173,7 +181,6 @@ function theConversation() {
         context: context
       }, (err, response) => {
         context = response.context;
-        printContext('after call 1:');
 
         watson_response =  response.output.text[0];
         if (watson_response) {
@@ -186,5 +193,5 @@ function theConversation() {
 }
 
 /* Start the app */
-MIC_INSTANCE.start();
-theConversation();
+microphone.start();
+performConversation();
