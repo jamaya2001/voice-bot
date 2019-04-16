@@ -13,10 +13,8 @@
     "mic": "^2.1.1",
     "node-ffprobe": "^1.2.2",
     "play-sound": "^1.1.1",
-    "promise": "^8.0.1",
     "prompt": "^1.0.0",
-    "request-promise": "^4.2.2",
-    "watson-developer-cloud": "^3.18.3"
+    "watson-developer-cloud": "^4.0.1"
   },
   "license": "Apache-2.0",
   "licenses": [
