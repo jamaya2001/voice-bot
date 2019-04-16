@@ -18,9 +18,9 @@
 
 require('dotenv').config({ silent: true });
 
-const watson = require('watson-developer-cloud');
-const TextToSpeechV1 = require('watson-developer-cloud/text-to-speech/v1');
-const SpeechToTextV1 = require('watson-developer-cloud/speech-to-text/v1');
+const AssistantV1 = require('ibm-watson/assistant/v1');
+const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
+const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
 const fs = require('fs');
 const mic = require('mic');
 const speaker = require('play-sound')(opts = {});
@@ -30,7 +30,7 @@ var debug = false;
 var botIsActive = false;
 var startTime = new Date();
 
-const SLEEP_TIME = 60 * 1000;     // number of secs to wait before falling asleep
+const SLEEP_TIME = 10 * 1000;       // number of secs to wait before falling asleep
 const WAKE_WORD = "hello watson";   // if asleep, phrase that will wake us up
 
 /**
@@ -38,8 +38,8 @@ const WAKE_WORD = "hello watson";   // if asleep, phrase that will wake us up
  */
 
 /* Create Watson Services. */
-const conversation = new watson.AssistantV1({
-  version: '2018-02-16'
+const conversation = new AssistantV1({
+  version: '2019-02-28'
 });
 
 const speechToText = new SpeechToTextV1({
@@ -93,6 +93,7 @@ const speakResponse = (text) => {
   var writeStream = fs.createWriteStream('output.wav');
   textToSpeech.synthesize(params)
   .then(audio => {
+    // write the audio version of the text to the wav file
     audio.pipe(writeStream);
   })
   .catch(err => {
@@ -100,7 +101,6 @@ const speakResponse = (text) => {
   });
 
   writeStream.on('finish', function() {
-    console.log('writeStream - finished');
     // determine length of response to user
     ffprobe('output.wav', function(err, probeData) {
       if (probeData) {
@@ -109,13 +109,14 @@ const speakResponse = (text) => {
         microphone.pause();
         // play message to user
         speaker.play('output.wav');
+        // restart timer
+        startTime = new Date();
       }
     });
   });  
   writeStream.on('error', function(err) {
     console.log('Text-to-speech streaming error: ' + err);
   });
-
 };
 
 /* Log Watson Assistant context values, so we can follow along with its logic. */
