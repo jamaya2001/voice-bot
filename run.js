@@ -30,8 +30,9 @@ var debug = false;
 var botIsActive = false;
 var startTime = new Date();
 
+const wakeWord = "hey watson";      // if asleep, phrases that will wake us up
+
 const SLEEP_TIME = 10 * 1000;       // number of secs to wait before falling asleep
-const WAKE_WORD = "hello watson";   // if asleep, phrase that will wake us up
 
 /**
  * Configuration and setup
@@ -86,9 +87,10 @@ const speakResponse = (text) => {
     text: text,
     accept: 'audio/wav',
     voice: 'en-US_AllisonVoice'
+    // en-US_AllisonVoice
+    // en-US_LisaVoice
+    // en-US_MichaelVoice
   };
-
-  console.log('text: ' + text);
 
   var writeStream = fs.createWriteStream('output.wav');
   textToSpeech.synthesize(params)
@@ -157,8 +159,9 @@ function isActive(text) {
     return true;
   } else {
     // we are asleep - did we get a wake up call?
-    if (text.toLowerCase().indexOf(WAKE_WORD) > -1) {
+    if (text.toLowerCase().indexOf(wakeWord) > -1) {
       // time to wake up
+      console.log("App just woke up");
       botIsActive = true;
     } else {
       // false alarm, go back to sleep

@@ -1,92 +1,103 @@
-# Build a chatbot with voice activation
+Personal assistant devices are one of the main use cases for Speech to Text technology for main stream users. "Wake words" engage devices to process what they hear, like "Hey Google" or "Alexa", often sending it to the cloud if a connection has been established. Watson Speech to Text can be used somewhat similarly, depending on how you write your client application.
 
-## Included components
+While the libraries and methods might differ for your target platform or programming language, the steps in the tutorial below should help you understand how to create an application that's always listening, but only process after a "wake word" has been triggered.
 
-* [Watson Assistant](https://www.ibm.com/watson/developercloud/conversation.html): Build, test and deploy a bot or virtual agent across mobile devices, messaging platforms, or even on a physical robot.
-* [Watson Text to Speech](https://www.ibm.com/watson/developercloud/text-to-speech.html): Converts written text into natural sounding audio in a variety of languages and voices.
-* [Watson Speech to Text](https://www.ibm.com/watson/developercloud/speech-to-text.html): A service that converts human voice into written text.
+## Learning objectives
 
-## Featured technologies
+In this tutorial you will learn how to create a **chatbot** in Node.JS that will only engage with the user after a "wake word" is heard.
 
-* [Node.js](https://nodejs.org/en/): An asynchronous event driven JavaScript runtime, designed to build scalable applications.
+## Prerequisites
 
-# Steps
+* Watson Speech-to-Text
+* Watson Text-to-Speech
+* Watson Assistant
 
-1. [Clone the repo](#1-clone-the-repo)
-1. [Create IBM Cloud services](#2-create-ibm-cloud-services)
-1. [Configure Watson Assistant](#3-configure-watson-conversation)
-1. [Enable Watson Speech to Text](#4-enable-watson-speech-to-text)
-1. [Enable Watson Text to Speech](#5-enable-watson-text-to-speech)
-1. [Run the application](#6-run-the-application)
+## Estimated time
 
-## 1. Clone the repo
+Completing this tutorial should take about 30 minutes.
 
-## 2. Create IBM Cloud services
+## Steps
 
-Create the following services:
+Start by creating a local subdirectory where you can store the assets created for this tutorial.
 
-  * [**Watson Assistant**](https://console.ng.bluemix.net/catalog/services/conversation)
-  * [**Watson Text to Speech**](https://console.ng.bluemix.net/catalog/services/text-to-speech/)
-  * [**Watson Speech to Text**](https://console.ng.bluemix.net/catalog/services/speech-to-text/)
+### Create Watson Services
 
-## 3. Configure Watson Assistant
+From the [IBM Cloud](https://cloud.ibm.com/) dashboard, click the `Create Resource` button to create the "Lite" versions of each Watson.
 
-Launch the **Watson Assistant** tool and create a skill using the default conversation.
+### Configure credentials
 
-## 4. Enable Watson Speech to Text
+Cut and paste the following contents into a local file and name it `.env`.
 
-Select the **Watson Speech to Text** service. Select the **Service credentials** menu item.
+```script
+# Watson Assistant
+# CONVERSATION_URL=<add_assistant_url>
+CONVERSATION_WORKSPACE_ID=<add_assistant_workspace_id>
+CONVERSATION_USERNAME=apikey
+CONVERSATION_PASSWORD=<add_assistant_iam_apikey>
 
-![](doc/source/images/speech_to_text_ids.png)
+# Watson Speech to Text
+SPEECH_TO_TEXT_URL=<add_speech_to_text_url>
+SPEECH_TO_TEXT_USERNAME=apikey
+SPEECH_TO_TEXT_PASSWORD=<add_speech_to_text_iam_apikey>
 
-Click **View Credentials** and save the **username** and **password** values.
-
-## 5. Enable Watson Text to Speech
-
-Select the **Watson Text to Speech** service. Select the **Service credentials** menu item.
-
-![](doc/source/images/text_to_speech_ids.png)
-
-Click **View Credentials** and save the **username** and **password** values.
-
-## 6. Run the application
-
-First, copy the [`env.sample`](env.sample) file to `.env` and then update the file with the credentials created in the previous steps:
-
-```
-cp env.sample .env
+# Watson Text to Speech
+TEXT_TO_SPEECH_URL=<add_text_to_speech_url>
+TEXT_TO_SPEECH_USERNAME=apikey
+TEXT_TO_SPEECH_PASSWORD=<add_text_to_speech_iam_apikey>
 ```
 
-> Note: Depending on the region that you provision your Watson Services, you will either be given a user/password or IAM apikey values for your credentials. The .env file will accomodate both. Just remember to comment out or remove all of the key-value pair entry lines that you do not use.
+Replace the `<***>` tags with the actual values created for your services. 
 
-Second, install dependencies by running the following command from the cloned repo location:
+> NOTE: do not change any of the key names, or the value `apikey` for any of the `**_USERNAME` keys.
 
+Credentials can be found by clicking the `Service Credentials` tab, then the `View Credentials` option from the panel of your created Watson service, as shown below:
+
+![](images/credentials-sample.png)
+
+An additional `WORKSPACE_ID` value is required to access the Watson Assistant service. To get this value, select the `Manage` tab, then the `Launch tool` button from the panel of your Watson Assistance service. From the service instance panel, select the `Skills` tab to display the skills that exist for your service. For this tutorial, we will be using the `Custom Skill Sample Skill` that comes with the service:
+
+![](images/sample-skill.png)
+
+Click the option button (highlighted in the image above) to view all of your skill details and service credentials:
+
+![](images/sample-skill-creds.png)
+
+### Create your run-time environment
+
+Now we need to download the NPM packages to run our application. Here is a sample `package.json` file that you can place in your local directory.
+
+```json
+{
+  "name": "chatbot-with-voice-activation-wake-word",
+  "version": "1.0.0",
+  "description": "Converse with achatbot.",
+  "main": "run.js",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "ibm-watson": "^4.0.1",
+    "jsonfile": "^4.0.0",
+    "mic": "^2.1.1",
+    "node-ffprobe": "^1.2.2",
+    "play-sound": "^1.1.1",
+    "prompt": "^1.0.0"
+  }
+}
 ```
+
+Once created, you can simply run the install command to download the requred packages:
+
+```bash
 npm install
 ```
 
-> **NOTE:** you may need to install other dependencies, refer to the [Troubleshooting](troubleshooting) section below.
+#### Install audio-related dependencies
 
-Lastly, run the application:
+You may need to install a few audio related dependencies if they don't alreay exist on your system.
 
-```
-npm start
-```
-
-Wake up the chatbot by saying "hello".
-
-# Troubleshooting
-
-### Help! My app is crashing
-
-You may need to install a few audio related dependencies if you're seeing the following error:
-
-```
-events.js:163
-  throw er; // Unhandled 'error' event
-```
-
-#### On OSX
+##### On OSX
 
 Use `brew` to install:
 
@@ -94,45 +105,249 @@ Use `brew` to install:
 * sox
 * ffmpeg
 
-```
+```bash
 brew install sox mplayer ffmpeg
 ```
 
-And use NPM to install:
-
-* node-ffprobe
-
-```
-npm install node-ffprobe
-```
-
-#### On Ubuntu
+##### On Ubuntu
 
 Use `apt-get` to install:
 
 * ffmpeg
 
-```
+```bash
 sudo apt-get install ffmpeg
 ```
 
-And use NPM to install:
+### Run the chatbot code
 
-* node-ffprobe
+The following code snippet is a simple Node.JS app that will utilize the Watson services you just created. Hopefully the code is documented well enough that you can easily follow along.
+
+Cut and paste the following code into a local file name `run.js`:
+
+```javascript
+require('dotenv').config({ silent: true });
+
+const AssistantV1 = require('ibm-watson/assistant/v1');
+const TextToSpeechV1 = require('ibm-watson/text-to-speech/v1');
+const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1');
+const fs = require('fs');
+const mic = require('mic');
+const speaker = require('play-sound')(opts = {});
+const ffprobe = require('node-ffprobe');
+var context = {};
+var debug = false;
+var botIsActive = false;
+var startTime = new Date();
+
+const wakeWord = "hey watson";      // if asleep, phrases that will wake us up
+
+const SLEEP_TIME = 10 * 1000;       // number of secs to wait before falling asleep
+                   
+/**
+ * Configuration and setup
+ */
+
+/* Create Watson Services. */
+const conversation = new AssistantV1({
+  version: '2019-02-28'
+});
+
+const speechToText = new SpeechToTextV1({
+});
+
+const textToSpeech = new TextToSpeechV1({
+});
+
+/* Create and configure the microphone */
+const micParams = {
+  rate: 44100,
+  channels: 2,
+  debug: false,
+  exitOnSilence: 6
+};
+const microphone = mic(micParams);
+const micInputStream = microphone.getAudioStream();
+
+let pauseDuration = 0;
+micInputStream.on('pauseComplete', ()=> {
+  console.log('Microphone paused for', pauseDuration, 'seconds.');
+  // Stop listening when Watson is talking.
+  setTimeout(function() {
+    microphone.resume();
+      console.log('Microphone resumed.');
+  }, Math.round(pauseDuration * 1000));
+});
+
+/**
+ * Functions and main app
+ */
+
+/* Convert speech to text. */
+const textStream = micInputStream.pipe(
+  speechToText.recognizeUsingWebSocket({
+    content_type: 'audio/l16; rate=44100; channels=2',
+    interim_results: true,
+    inactivity_timeout: -1
+  })).setEncoding('utf8');
+
+/* Convert text to speech. */
+const speakResponse = (text) => {
+  var params = {
+    text: text,
+    accept: 'audio/wav',
+    voice: 'en-US_AllisonVoice'
+    // en-US_AllisonVoice
+    // en-US_LisaVoice
+    // en-US_MichaelVoice
+  };
+
+  var writeStream = fs.createWriteStream('output.wav');
+  textToSpeech.synthesize(params)
+  .then(audio => {
+    // write the audio version of the text to the wav file
+    audio.pipe(writeStream);
+  })
+  .catch(err => {
+    console.log('error:', err);
+  });
+
+  writeStream.on('finish', function() {
+    // determine length of response to user
+    ffprobe('output.wav', function(err, probeData) {
+      if (probeData) {
+        pauseDuration = probeData.format.duration;
+        // pause microphone until response is delivered to user
+        microphone.pause();
+        // play message to user
+        speaker.play('output.wav');
+        // restart timer
+        startTime = new Date();
+      }
+    });
+  });  
+  writeStream.on('error', function(err) {
+    console.log('Text-to-speech streaming error: ' + err);
+  });
+};
+
+/* Log Watson Assistant context values, so we can follow along with its logic. */
+function printContext(header) {
+  if (debug) {
+    console.log(header);
+
+    if (context.system) {
+      if (context.system.dialog_stack) {
+        const util = require('util');  
+        console.log("     dialog_stack: ['" +
+                    util.inspect(context.system.dialog_stack, false, null) + "']");
+      }
+    }
+  }
+}
+
+/* Log significant responses from Watson to the console. */
+function watsonSays(response) {
+  if (typeof(response) !== 'undefined') {
+    console.log('Watson says:', response);
+  }
+}
+
+/* Determine if we are ready to talk, or need a wake up command */
+function isActive(text) {
+  var elapsedTime = new Date() - startTime;
+  
+  if (elapsedTime > SLEEP_TIME) {
+    // go to sleep
+    startTime = new Date();
+    botIsActive = false;
+  }
+
+  if (botIsActive) {
+    // in active conversation, so stay awake
+    startTime = new Date();
+    return true;
+  } else {
+    // we are asleep - did we get a wake up call?
+    if (text.toLowerCase().indexOf(wakeWord) > -1) {
+      // time to wake up
+      console.log("App just woke up");
+      botIsActive = true;
+    } else {
+      // false alarm, go back to sleep
+      console.log("App needs the wake up command");
+    }
+    return botIsActive;
+  }
+}
+
+/* Keep conversation with user alive until it breaks */
+function performConversation() {
+  console.log('App is listening, you may speak now.');
+
+  textStream.on('data', (user_speech_text) => {
+    userSpeechText = user_speech_text.toLowerCase();
+    console.log('\n\nApp hears: ', user_speech_text);
+    if (isActive(user_speech_text)) {
+      conversation.message({
+        workspace_id: process.env.CONVERSATION_WORKSPACE_ID,
+        input: {'text': user_speech_text},
+        context: context
+      }, (err, response) => {
+        context = response.context;
+
+        watson_response =  response.output.text[0];
+        if (watson_response) {
+          speakResponse(watson_response);
+        }
+        watsonSays(watson_response);
+      });
+    }
+  });
+}
+
+/* Start the app */
+microphone.start();
+performConversation();
 
 ```
-npm install node-ffprobe
+
+## 6. Run the application
+
+To run the application:
+
+```
+npm start
 ```
 
-### When running on Mac OSX, microphone is not picking up any sound
+Some important notes regarding the execution of the chatbot:
+
+* The app starts in sleep mode and will only reply when it hears "Hey Watson!".
+* The app will return to sleep mode if it doesn't hear anything for 10 seconds (this value can be changed in the app).
+* Once engaged, the app will respond in accordance with the `Customer Care Sample Skill` dialog defined in the Watson Assistant service. You can explore the dialog from within the service tooling for help determining phrases it will respond to.
+* Whenever the chatbot talks, it pauses the microphone for the duration of the phrase so that it doesn't inadvertently hear itself and get confused.
+* Audio from the app is streamed to a local file named `output.wav`, which is then played out through the speaker.
+* The app will generate console output that should help you follow along and debug any issues you may run into.
+
+Here is some example output from the chatbot:
+
+![](images/sample-output.png)
+
+> Note: As you can see, the dialog is less than optimal. When the app goes back to sleep, it should clear the dialog and start fresh. This could be fixed by modifying the smaple dialog provided in Watson Assistant, but dialog customization is beyond the scope of this tutorial.
+
+# Troubleshooting
+
+## If running on Mac OSX, microphone doesn't appear to be picking up any sound
 
 Ensure that the basic microphone functionality is working:
 
-```
+```bash
 sox -d test.wav        // speak into mic, then ctrl-c to exit
 sox test.wav -d        // playback
 ```
 
-# License
+## Summary
 
-[Apache 2.0](LICENSE)
+This tutorial shows how you can use a wake word to initiate dialog with a chatbot built on IBM Watson services.
+
+Looking for other solutions for streaming? Check out the [Node.JS SDK example](https://github.com/watson-developer-cloud/node-sdk/blob/master/examples/speech_to_text.v1.js).
