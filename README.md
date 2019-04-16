@@ -123,7 +123,7 @@ sudo apt-get install ffmpeg
 
 The following code snippet is a simple Node.JS app that will utilize the Watson services you just created. Hopefully the code is documented well enough that you can easily follow along.
 
-Cut and paste the following code into a local file name `run.js`:
+Cut and paste the following code into a local file and name it `run.js`:
 
 ```javascript
 require('dotenv').config({ silent: true });
