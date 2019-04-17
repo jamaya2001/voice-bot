@@ -8,10 +8,10 @@ In this tutorial you will learn how to create a **chatbot** in Node.JS that will
 
 ## Prerequisites
 
-* An IBM Cloud account
-* Watson Speech-to-Text
-* Watson Text-to-Speech
-* Watson Assistant
+* IBM Cloud account
+* Watson Speech-to-Text service
+* Watson Text-to-Speech service
+* Watson Assistant service
 * Basic understanding of Node.JS and NPM
 
 ## Estimated time
