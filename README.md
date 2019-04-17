@@ -8,9 +8,11 @@ In this tutorial you will learn how to create a **chatbot** in Node.JS that will
 
 ## Prerequisites
 
-* Watson Speech-to-Text
-* Watson Text-to-Speech
-* Watson Assistant
+* IBM Cloud account
+* Watson Speech-to-Text service
+* Watson Text-to-Speech service
+* Watson Assistant service
+* Basic understanding of Node.JS and NPM
 
 ## Estimated time
 
@@ -349,5 +351,7 @@ sox test.wav -d        // playback
 ## Summary
 
 This tutorial shows how you can use a wake word to initiate dialog with a chatbot built on IBM Watson services.
+
+If you're looking for a similar solution that works in a browser, take a look at the article ["Capturing Audio in the Browser for "Wake Words"](https://medium.com/@MissAmaraKay/capturing-audio-in-the-browser-for-wake-words-cc4972263773).
 
 Looking for other solutions for streaming? Check out the [Node.JS SDK example](https://github.com/watson-developer-cloud/node-sdk/blob/master/examples/speech_to_text.v1.js).
