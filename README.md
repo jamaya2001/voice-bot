@@ -1,32 +1,32 @@
+## Introduction
+
 Personal assistant devices are one of the main use cases for Speech to Text technology for main stream users. "Wake words" engage devices to process what they hear, like "Hey Google" or "Alexa", often sending it to the cloud if a connection has been established. Watson Speech to Text can be used somewhat similarly, depending on how you write your client application.
 
 While the libraries and methods might differ for your target platform or programming language, the steps in the tutorial below should help you understand how to create an application that's always listening, but only process after a "wake word" has been triggered.
 
-## Learning objectives
+# Learning objectives
 
-In this tutorial you will learn how to create a **chatbot** in Node.JS that will only engage with the user after a "wake word" is heard.
+In this tutorial you will learn how to create a **chatbot** in Node.JS that will only engage with the user after a "wake word" is heard. It will utilize several Watson services to handle the verbal dialog between the user and the chatbot.
 
-## Prerequisites
+# Prerequisites
 
-* IBM Cloud account
-* Watson Speech-to-Text service
-* Watson Text-to-Speech service
-* Watson Assistant service
-* Basic understanding of Node.JS and NPM
+* An [IBM Cloud](https://www.ibm.com/cloud/) account
+* A [Watson Speech-to-Text](https://cloud.ibm.com/catalog/services/speech-to-text) service
+* A [Watson Text-to-Speech](https://cloud.ibm.com/catalog/services/text-to-speech) service
+* A [Watson Assistant](https://cloud.ibm.com/catalog/services/watson-assistant) service
+* Basic understanding of [Node.JS](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/)
 
-## Estimated time
+# Estimated time
 
-Completing this tutorial should take about 30 minutes.
+Completing this tutorial should take about 30 minutes, assuming you have an IBM Cloud account and an NPM environment setup on your local computer (Mac XOS or Linux).
 
-## Steps
+You will need to create several assets to complete this tutorial - so it would be a good idea to start by creating a fresh local subdirectory to place them all.
 
-Start by creating a local subdirectory where you can store the assets created for this tutorial.
+# Step 1 - Create Watson Services
 
-### Create Watson Services
+From the [IBM Cloud](https://cloud.ibm.com/) dashboard, click the `Create Resource` button to create the "Lite" versions of each service.
 
-From the [IBM Cloud](https://cloud.ibm.com/) dashboard, click the `Create Resource` button to create the "Lite" versions of each Watson.
-
-### Configure credentials
+## Configure credentials
 
 Cut and paste the following contents into a local file and name it `.env`.
 
@@ -64,7 +64,7 @@ Click the option button (highlighted in the image above) to view all of your ski
 
 ![](images/sample-skill-creds.png)
 
-### Create your run-time environment
+# Step 2 - Create your run-time environment
 
 Now we need to download the NPM packages to run our application. Here is a sample `package.json` file that you can place in your local directory.
 
@@ -95,11 +95,11 @@ Once created, you can simply run the install command to download the requred pac
 npm install
 ```
 
-#### Install audio-related dependencies
+## Install audio-related dependencies
 
 You may need to install a few audio related dependencies if they don't alreay exist on your system.
 
-##### On OSX
+### On OSX
 
 Use `brew` to install:
 
@@ -111,7 +111,7 @@ Use `brew` to install:
 brew install sox mplayer ffmpeg
 ```
 
-##### On Ubuntu
+### On Ubuntu
 
 Use `apt-get` to install:
 
@@ -121,9 +121,18 @@ Use `apt-get` to install:
 sudo apt-get install ffmpeg
 ```
 
-### Run the chatbot code
+# Step 3 - Load the chatbot code
 
-The following code snippet is a simple Node.JS app that will utilize the Watson services you just created. Hopefully the code is documented well enough that you can easily follow along.
+The following code snippet is a simple Node.JS app that will utilize the Watson services you just created.
+
+The code performs the following primary functions:
+
+* Create and initialize instances of the Watson services
+* Create and setup the microphone object
+* Converts audio from the microphone into text
+* Converts text into audio which is then played back through the speaker
+* Conducts a dialog by responding to questions from the user
+* Keeps a timer to determine if the chatbot is awake or asleep
 
 Cut and paste the following code into a local file and name it `run.js`:
 
@@ -145,7 +154,7 @@ var startTime = new Date();
 const wakeWord = "hey watson";      // if asleep, phrases that will wake us up
 
 const SLEEP_TIME = 10 * 1000;       // number of secs to wait before falling asleep
-                   
+
 /**
  * Configuration and setup
  */
@@ -199,6 +208,7 @@ const speakResponse = (text) => {
     text: text,
     accept: 'audio/wav',
     voice: 'en-US_AllisonVoice'
+    // voices to choose from:
     // en-US_AllisonVoice
     // en-US_LisaVoice
     // en-US_MichaelVoice
@@ -227,7 +237,7 @@ const speakResponse = (text) => {
         startTime = new Date();
       }
     });
-  });  
+  });
   writeStream.on('error', function(err) {
     console.log('Text-to-speech streaming error: ' + err);
   });
@@ -240,7 +250,7 @@ function printContext(header) {
 
     if (context.system) {
       if (context.system.dialog_stack) {
-        const util = require('util');  
+        const util = require('util');
         console.log("     dialog_stack: ['" +
                     util.inspect(context.system.dialog_stack, false, null) + "']");
       }
@@ -258,7 +268,7 @@ function watsonSays(response) {
 /* Determine if we are ready to talk, or need a wake up command */
 function isActive(text) {
   var elapsedTime = new Date() - startTime;
-  
+
   if (elapsedTime > SLEEP_TIME) {
     // go to sleep
     startTime = new Date();
@@ -314,11 +324,11 @@ performConversation();
 
 ```
 
-## 6. Run the application
+# Step 4 - Run the application
 
-To run the application:
+To run the application, simply:
 
-```
+```bash
 npm start
 ```
 
@@ -348,7 +358,7 @@ sox -d test.wav        // speak into mic, then ctrl-c to exit
 sox test.wav -d        // playback
 ```
 
-## Summary
+# Summary
 
 This tutorial shows how you can use a wake word to initiate dialog with a chatbot built on IBM Watson services.
 
