@@ -32,8 +32,8 @@ Cut and paste the following contents into a local file and name it `.env`.
 
 ```script
 # Watson Assistant
-CONVERSATION_WORKSPACE_ID=<add_conversation_workspace_id>
-CONVERSATION_IAM_APIKEY=<add_conversation_iam_apikey>
+ASSISTANT_WORKSPACE_ID=<add_assistant_workspace_id>
+ASSISTANT_IAM_APIKEY=<add_assistant_iam_apikey>
 
 # Watson Speech to Text
 SPEECH_TO_TEXT_URL=<url>

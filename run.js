@@ -180,7 +180,7 @@ function performConversation() {
     console.log('\n\nApp hears: ', user_speech_text);
     if (isActive(user_speech_text)) {
       conversation.message({
-        workspace_id: process.env.CONVERSATION_WORKSPACE_ID,
+        workspace_id: process.env.ASSISTANT_WORKSPACE_ID,
         input: {'text': user_speech_text},
         context: context
       }, (err, response) => {
