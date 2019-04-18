@@ -32,25 +32,19 @@ Cut and paste the following contents into a local file and name it `.env`.
 
 ```script
 # Watson Assistant
-# CONVERSATION_URL=<add_assistant_url>
-CONVERSATION_WORKSPACE_ID=<add_assistant_workspace_id>
-CONVERSATION_USERNAME=apikey
-CONVERSATION_PASSWORD=<add_assistant_iam_apikey>
+CONVERSATION_WORKSPACE_ID=<add_conversation_workspace_id>
+CONVERSATION_IAM_APIKEY=<add_conversation_iam_apikey>
 
 # Watson Speech to Text
-SPEECH_TO_TEXT_URL=<add_speech_to_text_url>
-SPEECH_TO_TEXT_USERNAME=apikey
-SPEECH_TO_TEXT_PASSWORD=<add_speech_to_text_iam_apikey>
+SPEECH_TO_TEXT_URL=<url>
+SPEECH_TO_TEXT_IAM_APIKEY=<add_speech_to_text_iam_apikey>
 
 # Watson Text to Speech
-TEXT_TO_SPEECH_URL=<add_text_to_speech_url>
-TEXT_TO_SPEECH_USERNAME=apikey
-TEXT_TO_SPEECH_PASSWORD=<add_text_to_speech_iam_apikey>
+TEXT_TO_SPEECH_URL=<url>
+TEXT_TO_SPEECH_IAM_APIKEY=<add_text_to_speech_iam_apikey>
 ```
 
-Replace the `<***>` tags with the actual values created for your services. 
-
-> NOTE: do not change any of the key names, or the value `apikey` for any of the `**_USERNAME` keys.
+Replace the `<***>` tags with the actual values created for your services.
 
 Credentials can be found by clicking the `Service Credentials` tab, then the `View Credentials` option from the panel of your created Watson service, as shown below:
 
